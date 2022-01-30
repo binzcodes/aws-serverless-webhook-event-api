@@ -1,0 +1,16 @@
+{
+  "name": "test-webhooks",
+  "type": "webhook",
+  "actions": [
+    {
+      "type": "timesheet",
+      "source": "0b51affe-edbe-4c14-ae6a-1509abf5bc0d",
+      "payload": {
+        "project": "test-webhooks",
+        "date": "2022-02-10",
+        "hours": "7.5"
+      },
+      "metadata": {}
+    }
+  ]
+}

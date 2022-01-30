@@ -1,10 +1,11 @@
 org: binzi
 app: aws-node-express-dynamodb-api-project
 service: aws-node-express-dynamodb-api-project
-frameworkVersion: '3'
+frameworkVersion: "3"
 
 custom:
-  tableName: 'users-table-${sls:stage}'
+  tableName: "users-table-${sls:stage}"
+  WebhooksTableName: "webhooks-table-${sls:stage}"
   dynamodb:
     start:
       port: 8000
@@ -34,9 +35,11 @@ provider:
             - dynamodb:UpdateItem
             - dynamodb:DeleteItem
           Resource:
-            - Fn::GetAtt: [ UsersTable, Arn ]
+            - Fn::GetAtt: [UsersTable, Arn]
+            - Fn::GetAtt: [WebhooksTable, Arn]
   environment:
     USERS_TABLE: ${self:custom.tableName}
+    WEBHOOKS_TABLE: ${self:custom.WebhooksTableName}
 
 functions:
   api:
@@ -57,6 +60,17 @@ resources:
             KeyType: HASH
         BillingMode: PAY_PER_REQUEST
         TableName: ${self:custom.tableName}
+    WebhooksTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: uuid
+            AttributeType: S
+        KeySchema:
+          - AttributeName: uuid
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:custom.WebhooksTableName}
 
 plugins:
   - serverless-dynamodb-local
