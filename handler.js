@@ -32,40 +32,12 @@ if (process.env.IS_OFFLINE) {
 
 const dynamoDbClient = new AWS.DynamoDB.DocumentClient(dynamoDbClientParams);
 
-// ! I think sending as a buffer with type may be most sensible
-// app.use(express.json());
-// parse various different custom JSON types as JSON
+// * definitely belongs in handler or mid-workflow
+// ? sending body as a buffer with content-type likely preferred
 app.use(bodyParser.json());
-// parse xml
 app.use(bodyParser.xml({xmlParseOptions}));
-// app.use(bodyParser.xml({type: "application/*+xml", xmlParseOptions}));
-// parse custom type into a Buffer 
-// * this kind of thing definitely belongs in a handler or mid workflow Lambda
-app.use(bodyParser.raw({type: "application/vnd.api+json"}));
-// parse an HTML body into a string
 app.use(bodyParser.text({type: "text/html"}));
 
-
-/*
-curl -X POST \
---url http://localhost:3000/events/762c912f-bc5d-47e9-9bb7-af4a21ae6ec5 \
---header 'Content-Type: application/json' \
---data-raw '{"date": "2020-02-10", "hours": "8"}'
-
-{
-  "name":"timesheet-test-metadata",
-  "type":"webhook",
-  "actions":[{
-    "type":"timesheet",
-    "source":"762c912f-bc5d-47e9-9bb7-af4a21ae6ec5",
-    "payload":{
-      "date":"2020-02-10",
-      "hours":"8"
-    },
-    "metadata":{"source":"harvest"}
-  }]
-}
-*/
 app.post("/events/:eventId", async function (req, res) {
   const payload = req.body;
   const authParam = req.query.auth;
@@ -95,14 +67,12 @@ app.post("/events/:eventId", async function (req, res) {
         name,
         type: "webhook", // consistent from this endpoint
         source: uuid,
-        actions: [
-          {
+        actions: [{
             type: type,
             source: uuid,
             payload: payload,
             metadata,
-          },
-        ],
+        }],
       };
 
       // todo: dispatch SQS/EventBridge event
@@ -120,7 +90,6 @@ app.post("/events/:eventId", async function (req, res) {
   }
 });
 
-
 app.use("/events", function (req, res, next) {
   // todo: endpoint security for list and create
   console.log("Protecting:", req.method, "/events", "(not)");
@@ -131,13 +100,7 @@ app.get("/events", () => {
   // TODO: list events
 });
 
-/*
-curl -X POST --url http://localhost:3000/events \
---header 'Content-Type: application/json' \
---data-raw '{"name": "timesheet-test-metadata", "type": "timesheet", "source": "harvest"}'
-
-{"uuid":"9fd5b71d-2bbb-4ec0-8afd-f87a204de5dc","type":"timesheet","name":"timesheet-test-metadata"}
-*/
+// create new webhook endpoint
 app.post("/events", async function (req, res) {
   const {type, name, ...metadata} = req.body;
   if (typeof type !== "string")
