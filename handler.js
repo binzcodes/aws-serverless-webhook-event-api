@@ -9,9 +9,8 @@ const USERS_TABLE = process.env.USERS_TABLE;
 const dynamoDbClientParams = {};
 
 if (process.env.IS_OFFLINE) {
-
   AWS.config.update({
-    region: "us-west-1",
+    region: "localhost",
     accessKeyId: "accessKeyId",
     secretAccessKey: "secretAccessKey",
     endpoint: new AWS.Endpoint("http://localhost:8000"),
@@ -34,27 +33,27 @@ app.get("/users/:userId", async function (req, res) {
   };
 
   try {
-    const { Item } = await dynamoDbClient.get(params).promise();
+    const {Item} = await dynamoDbClient.get(params).promise();
     if (Item) {
-      const { userId, name } = Item;
-      res.json({ userId, name });
-    } else {
-      res
-        .status(404)
-        .json({ error: 'Could not find user with provided "userId"' });
+      const {userId, name} = Item;
+      return res.json({userId, name});
     }
+    return res
+      .status(404)
+      .json({error: 'Could not find user with provided "userId"'});
   } catch (error) {
     console.log(error);
-    res.status(500).json({ error: "Could not retreive user" });
+    return res.status(500).json({error: "Failed to retrieve user"});
   }
 });
 
 app.post("/users", async function (req, res) {
-  const { userId, name } = req.body;
+  const {userId, name} = req.body;
   if (typeof userId !== "string") {
-    res.status(400).json({ error: '"userId" must be a string' });
-  } else if (typeof name !== "string") {
-    res.status(400).json({ error: '"name" must be a string' });
+    return res.status(400).json({error: '"userId" must be a string'});
+  }
+  if (typeof name !== "string") {
+    return res.status(400).json({error: '"name" must be a string'});
   }
 
   const params = {
@@ -67,10 +66,10 @@ app.post("/users", async function (req, res) {
 
   try {
     await dynamoDbClient.put(params).promise();
-    res.json({ userId, name });
+    return res.json({userId, name});
   } catch (error) {
     console.log(error);
-    res.status(500).json({ error: "Could not create user" });
+    return res.status(500).json({error: "Could not create user"});
   }
 });
 
@@ -79,6 +78,5 @@ app.use((req, res, next) => {
     error: "Not Found",
   });
 });
-
 
 module.exports.handler = serverless(app);
