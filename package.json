@@ -1,0 +1,16 @@
+{
+  "name": "aws-node-express-dynamodb-api-project",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "start:dev": "sls dynamodb install && sls offline start"
+  },
+  "dependencies": {
+    "express": "^4.17.1",
+    "serverless-http": "^2.7.0"
+  },
+  "devDependencies": {
+    "serverless-dynamodb-local": "^0.2.40",
+    "serverless-offline": "^8.4.0"
+  }
+}
