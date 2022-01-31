@@ -124,7 +124,10 @@ app.post("/events", async function (req, res) {
 
   try {
     await dynamoDbClient.put(params).promise();
-    return res.json({uuid, authString, type, name});
+    const url = `${
+      req.protocol + "://" + req.get("host")
+    }/events/${uuid}?auth=${authString}`;
+    return res.json({uuid, authString, type, name, url});
   } catch (error) {
     console.log(error);
     return res.status(500).json({error: "Could not create event"});
