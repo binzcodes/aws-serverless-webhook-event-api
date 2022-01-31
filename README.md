@@ -42,32 +42,60 @@ _Note_: In current form, after deployment, your API is public and can be invoked
 After successful deployment, you can create a new user by calling the corresponding endpoint:
 
 ```bash
-curl --request POST 'https://xxxxxx.execute-api.us-east-1.amazonaws.com/users' --header 'Content-Type: application/json' --data-raw '{"name": "John", "userId": "someUserId"}'
+curl --location --request POST 'http://localhost:3000/events' \
+--header 'Content-Type: application/json' \
+--data-raw '{"name": "webhook-test-metadata-auth", "type": "timesheet", "foo": "bar"}'
 ```
 
-Which should result in the following response:
+This example will create a "timesheet" action and should result in the following response:
 
 ```bash
-{"userId":"someUserId","name":"John"}
+{
+    "uuid": "0fd4a303-a70b-43da-b0da-5e601424589c",
+    "authString": "9313405d-a2cb-4ee6-b6fd-037604bd4742",
+    "type": "timesheet",
+    "name": "webhook-test",
+    "url": "https://localhost:3000/events/0fd4a303-a70b-43da-b0da-5e601424589c?auth=9313405d-a2cb-4ee6-b6fd-037604bd4742"
+}
 ```
 
-You can later retrieve the user by `userId` by calling the following endpoint:
+The webhook  by calling the following endpoint:
 
 ```bash
-curl https://xxxxxxx.execute-api.us-east-1.amazonaws.com/users/someUserId
+curl --location --request POST 'http://localhost:3000/events/0fd4a303-a70b-43da-b0da-5e601424589c?auth=9313405d-a2cb-4ee6-b6fd-037604bd4742' \
+--header 'Content-Type: application/json' \
+--data-raw '{"date": "2020-02-10", "hours": "10", "message": ""}'
 ```
 
-Which should result in the following response:
+For now this should respond with the message this endpoint intends to dispatch:
 
 ```bash
-{"userId":"someUserId","name":"John"}
+{
+    "name": "webhook-test",
+    "type": "webhook",
+    "source": "0fd4a303-a70b-43da-b0da-5e601424589c",
+    "actions": [
+        {
+            "type": "timesheet",
+            "source": "0fd4a303-a70b-43da-b0da-5e601424589c",
+            "payload": {
+                "date": "2020-02-10",
+                "hours": "10",
+                "message": ""
+            },
+            "metadata": {
+                "foo": "bar"
+            }
+        }
+    ]
+}
 ```
 
-If you try to retrieve user that does not exist, you should receive the following response:
+Errors are handled but in prod this endpoint would return a blank 200 regardless of data to mitigate brute-forcing.
 
-```bash
-{"error":"Could not find user with provided \"userId\""}
-```
+Messages will be queued by SQS or EventBridge and filtered to handlers based on uuid 
+
+API handles and transforms XML & JSON however payload should be dispatched as a buffer this should be handled mid-workflow by a lambda
 
 ### Local development
 
