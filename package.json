@@ -10,7 +10,7 @@
     "body-parser-xml": "^2.0.5",
     "express": "^4.21.2",
     "serverless-http": "^2.7.0",
-    "uuid": "^8.3.2"
+    "uuid": "^11.0.5"
   },
   "devDependencies": {
     "serverless-dynamodb-local": "^0.2.40",
